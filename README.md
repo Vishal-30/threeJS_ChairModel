@@ -1,6 +1,6 @@
 # Chair Configurator
 
-This is a simple chair configurator made with Three.js.
+This is a simple chair configurator for the web.
 
 You can:
 

@@ -32,16 +32,16 @@ export function createScene({ canvas, backgroundColor, cameraFar }) {
   controls.dampingFactor = 0.08;
   controls.target.set(0, 0.72, 0);
 
-  const hemiLight = new THREE.HemisphereLight(0xfff7ef, 0x6a707b, 0.95);
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
+  const hemiLight = new THREE.HemisphereLight(0xfff7ef, 0x6a707b, 0.8);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.9);
   keyLight.position.set(6, 10, 8);
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(2048, 2048);
 
-  const fillLight = new THREE.DirectionalLight(0xd8e5ff, 0.45);
+  const fillLight = new THREE.DirectionalLight(0xd8e5ff, 0.32);
   fillLight.position.set(-7, 4, 5);
 
-  const rimLight = new THREE.PointLight(0xffc98b, 0.4, 18);
+  const rimLight = new THREE.PointLight(0xffc98b, 0.28, 18);
   rimLight.position.set(-2, 3.4, -3.2);
 
   scene.add(hemiLight, keyLight, fillLight, rimLight);
