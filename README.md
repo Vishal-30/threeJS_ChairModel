@@ -50,5 +50,3 @@ Note:
 - `src/scene.js` handles the Three.js scene
 - `src/materials.js` handles chair materials
 - `src/lib/state.js` stores the selected options
-
-For a simple project overview, see `PROJECT.md`.

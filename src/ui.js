@@ -75,6 +75,8 @@ export function createUI({
   const resetButton = document.getElementById('js-reset');
   const shareButton = document.getElementById('js-share');
   const screenshotButton = document.getElementById('js-screenshot');
+  const trayShell = document.getElementById('js-tray-shell');
+  const trayToggle = document.getElementById('js-tray-toggle');
 
   const optionButtons = new Map();
   const presetButtons = new Map();
@@ -100,6 +102,11 @@ export function createUI({
   resetButton.addEventListener('click', onReset);
   shareButton.addEventListener('click', onShare);
   screenshotButton.addEventListener('click', onScreenshot);
+  trayToggle.addEventListener('click', () => {
+    const isCollapsed = trayShell.classList.toggle('tray-shell--mobile-collapsed');
+    trayToggle.setAttribute('aria-expanded', String(!isCollapsed));
+    trayToggle.textContent = isCollapsed ? 'Open' : 'Close';
+  });
 
   function updateSwatches(activePart, selectedFinishId) {
     const availableFinishes = getAvailableFinishes(catalog, activePart);

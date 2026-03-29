@@ -22,7 +22,7 @@ export function createScene({ canvas, backgroundColor, cameraFar }) {
     0.1,
     1000
   );
-  camera.position.set(0.9, 1.9, cameraFar);
+  camera.position.set(0.9, 1.7, cameraFar);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.maxPolarAngle = Math.PI / 2;
@@ -30,7 +30,7 @@ export function createScene({ canvas, backgroundColor, cameraFar }) {
   controls.enableDamping = true;
   controls.enablePan = false;
   controls.dampingFactor = 0.08;
-  controls.target.set(0, 0.95, 0);
+  controls.target.set(0, 0.72, 0);
 
   const hemiLight = new THREE.HemisphereLight(0xfff7ef, 0x6a707b, 0.95);
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
@@ -51,7 +51,7 @@ export function createScene({ canvas, backgroundColor, cameraFar }) {
     new THREE.ShadowMaterial({ opacity: 0.18 })
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -0.72;
+  floor.position.y = -0.56;
   floor.receiveShadow = true;
   scene.add(floor);
 
@@ -63,7 +63,7 @@ export function createScene({ canvas, backgroundColor, cameraFar }) {
       metalness: 0
     })
   );
-  plinth.position.y = -0.8;
+  plinth.position.y = -0.64;
   plinth.receiveShadow = true;
   scene.add(plinth);
 

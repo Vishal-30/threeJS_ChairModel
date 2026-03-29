@@ -78,12 +78,13 @@
       <span class="drag-notice" id="js-drag-notice">Drag to rotate 360&#176;</span>
       <canvas id="c"></canvas>
 
-      <div class="tray-shell glass">
+      <div id="js-tray-shell" class="tray-shell tray-shell--mobile-collapsed glass">
         <div class="tray-header">
           <div>
             <p class="eyebrow">Finishes</p>
             <strong>Choose a material</strong>
           </div>
+          <button id="js-tray-toggle" type="button" class="tray-toggle" aria-expanded="false">Open</button>
           <p class="tray-hint">Scroll to see more.</p>
         </div>
         <div id="js-tray" class="tray">

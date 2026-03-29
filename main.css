@@ -328,9 +328,23 @@ h1 {
 }
 
 .tray-header {
-  display: block;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.tray-toggle {
+  display: none;
+  align-self: flex-start;
+  border: 1px solid #d3ccc3;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #2a2a2a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .tray {
@@ -503,16 +517,15 @@ h1 {
   }
 
   .tray-shell {
-    top: auto;
+    top: 12px;
     left: 12px;
     right: 12px;
-    bottom: 12px;
     width: auto;
     padding: 12px;
   }
 
-  .tray-header {
-    flex-direction: column;
+  .tray-toggle {
+    display: inline-flex;
   }
 
   .tray {
@@ -540,6 +553,11 @@ h1 {
     height: 64px;
     border-radius: 10px;
     scroll-snap-align: start;
+  }
+
+  .tray-shell--mobile-collapsed .tray,
+  .tray-shell--mobile-collapsed .tray-hint {
+    display: none;
   }
 
   .drag-notice {

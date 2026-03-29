@@ -95,7 +95,7 @@ async function bootstrap() {
       model = gltf.scene;
       model.scale.set(2, 2, 2);
       model.rotation.y = Math.PI;
-      model.position.y = -0.7;
+      model.position.y = -0.48;
 
       model.traverse((object) => {
         if (object.isMesh) {
