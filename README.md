@@ -1,24 +1,54 @@
-# threeJS_ChairModel
+# Chair Configurator
 
-Three.js chair configurator.
+This is a simple chair configurator made with Three.js.
 
-![ThreeJS chairmodel](https://user-images.githubusercontent.com/78237401/169827435-1850db78-5d75-454a-abbe-2bffb59a9853.png)
+You can:
 
-## npm setup
+- pick a chair part
+- change its material
+- use presets
+- see a simple total price
+- save and share the current setup
+- download a screenshot
 
-This project now uses `npm` with a local `three` dependency and `vite` for development/building.
-The chair model and texture assets are stored locally in `public/assets`.
-
-## Commands
+## Run It
 
 ```bash
 npm install
 npm run dev
 ```
 
-To create a production build:
+## Build It
 
 ```bash
 npm run build
 npm run preview
 ```
+
+## Check The Code
+
+```bash
+npm run lint
+npm run test
+```
+
+## Optional Asset Tools
+
+```bash
+npm run optimize:textures
+npm run optimize:model
+```
+
+Note:
+`optimize:model` creates an optimized copy of the model and keeps the original file unchanged.
+
+## Main Project Files
+
+- `src/main.js` starts the app
+- `src/data/catalog.js` stores chair data
+- `src/ui.js` handles the page UI
+- `src/scene.js` handles the Three.js scene
+- `src/materials.js` handles chair materials
+- `src/lib/state.js` stores the selected options
+
+For a simple project overview, see `PROJECT.md`.

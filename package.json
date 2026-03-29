@@ -6,12 +6,25 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src scripts vite.config.js eslint.config.js prettier.config.js",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "optimize:textures": "node scripts/optimize-textures.mjs",
+    "optimize:model": "node scripts/optimize-model.mjs"
   },
   "dependencies": {
     "three": "0.127.0"
   },
   "devDependencies": {
-    "vite": "^6.3.5"
+    "@eslint/js": "^9.39.4",
+    "@gltf-transform/cli": "^4.3.0",
+    "eslint": "^9.39.4",
+    "globals": "^17.4.0",
+    "jsdom": "^27.0.1",
+    "prettier": "^3.8.1",
+    "sharp": "^0.34.5",
+    "vite": "^6.3.5",
+    "vitest": "^4.1.2"
   }
 }

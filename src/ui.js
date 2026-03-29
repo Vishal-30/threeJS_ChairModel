@@ -1,107 +1,186 @@
-export function buildColors(colors, tray) {
-  for (const [index, color] of colors.entries()) {
-    const swatch = document.createElement('div');
-    swatch.classList.add('tray__swatch');
+import { computeTotalPrice, getAvailableFinishes, getFinishForPart } from './lib/state.js';
 
-    if (color.texture) {
-      swatch.style.backgroundImage = `url(${color.texture})`;
-    } else {
-      swatch.style.background = `#${color.color}`;
-    }
-
-    swatch.dataset.key = index;
-    tray.append(swatch);
-  }
+function formatCurrency(value, currency) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0
+  }).format(value);
 }
 
-export function bindOptions(options, onSelect) {
-  let activeOption = document.querySelector('.option.--is-active')?.dataset.option ?? 'legs';
+function createOptionButton(part) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'option-card';
+  button.dataset.part = part.id;
+  button.title = part.description;
+  button.innerHTML = `
+    <img src="${part.icon}" alt="${part.label}" />
+    <span class="option-card__text">
+      <strong>${part.label}</strong>
+      <small>${part.description}</small>
+    </span>
+  `;
+  return button;
+}
 
-  for (const option of options) {
-    option.addEventListener('click', () => {
-      activeOption = option.dataset.option;
+function createPresetButton(preset) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'preset-card';
+  button.dataset.preset = preset.id;
+  button.innerHTML = `
+    <strong>${preset.name}</strong>
+    <span>${preset.description}</span>
+  `;
+  return button;
+}
 
-      for (const otherOption of options) {
-        otherOption.classList.remove('--is-active');
+function createSwatchButton(finish) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'tray__swatch';
+  button.dataset.finish = finish.id;
+  button.title = `${finish.label} (${finish.category})`;
+
+  if (finish.texture) {
+    button.style.backgroundImage = `url(${finish.texture})`;
+  } else {
+    button.style.background = finish.preview;
+  }
+
+  return button;
+}
+
+export function createUI({
+  catalog,
+  store,
+  onReset,
+  onShare,
+  onScreenshot,
+  onRetry,
+  shareMessageTimeout
+}) {
+  const optionsContainer = document.getElementById('js-options');
+  const presetsContainer = document.getElementById('js-presets');
+  const swatchesContainer = document.getElementById('js-tray-slide');
+  const selectionList = document.getElementById('js-selection-list');
+  const activePartLabel = document.getElementById('js-active-part');
+  const activeFinishLabel = document.getElementById('js-active-finish');
+  const totalPrice = document.getElementById('js-total-price');
+  const shareStatus = document.getElementById('js-share-status');
+  const loaderText = document.getElementById('js-loader-text');
+  const errorBanner = document.getElementById('js-load-error');
+  const retryButton = document.getElementById('js-retry-button');
+  const resetButton = document.getElementById('js-reset');
+  const shareButton = document.getElementById('js-share');
+  const screenshotButton = document.getElementById('js-screenshot');
+
+  const optionButtons = new Map();
+  const presetButtons = new Map();
+  let shareTimer = null;
+
+  optionsContainer.innerHTML = '';
+  for (const part of catalog.parts) {
+    const button = createOptionButton(part);
+    button.addEventListener('click', () => store.setActivePart(part.id));
+    optionsContainer.append(button);
+    optionButtons.set(part.id, button);
+  }
+
+  presetsContainer.innerHTML = '';
+  for (const preset of catalog.presets) {
+    const button = createPresetButton(preset);
+    button.addEventListener('click', () => store.applyPreset(preset.selections));
+    presetsContainer.append(button);
+    presetButtons.set(preset.id, button);
+  }
+
+  retryButton.addEventListener('click', onRetry);
+  resetButton.addEventListener('click', onReset);
+  shareButton.addEventListener('click', onShare);
+  screenshotButton.addEventListener('click', onScreenshot);
+
+  function updateSwatches(activePart, selectedFinishId) {
+    const availableFinishes = getAvailableFinishes(catalog, activePart);
+    swatchesContainer.innerHTML = '';
+
+    for (const finish of availableFinishes) {
+      const button = createSwatchButton(finish);
+      button.addEventListener('click', () => store.setFinish(activePart, finish.id));
+      if (finish.id === selectedFinishId) {
+        button.classList.add('tray__swatch--active');
       }
+      swatchesContainer.append(button);
+    }
+  }
 
-      option.classList.add('--is-active');
-      onSelect(activeOption);
-    });
+  function updateSelections(state) {
+    selectionList.innerHTML = '';
+
+    for (const part of catalog.parts) {
+      const finish = getFinishForPart(catalog, part.id, state.selections[part.id]);
+      const item = document.createElement('li');
+      item.className = 'selection-list__item';
+      item.innerHTML = `
+        <span>${part.label}</span>
+        <strong>${finish?.label ?? 'Unavailable'}</strong>
+      `;
+      selectionList.append(item);
+    }
+  }
+
+  function updatePresets(state) {
+    for (const preset of catalog.presets) {
+      const isActive = catalog.parts.every(
+        (part) => preset.selections[part.id] === state.selections[part.id]
+      );
+      presetButtons.get(preset.id)?.classList.toggle('preset-card--active', isActive);
+    }
   }
 
   return {
-    getActiveOption() {
-      return activeOption;
+    update(state) {
+      const activePart = catalog.parts.find((part) => part.id === state.activePart);
+      const activeFinish = getFinishForPart(catalog, state.activePart, state.selections[state.activePart]);
+
+      for (const part of catalog.parts) {
+        optionButtons.get(part.id)?.classList.toggle('option-card--active', part.id === state.activePart);
+      }
+
+      updateSwatches(state.activePart, state.selections[state.activePart]);
+      updateSelections(state);
+      updatePresets(state);
+
+      activePartLabel.textContent = activePart?.label ?? 'Choose a part';
+      activeFinishLabel.textContent = activeFinish
+        ? `${activeFinish.label} · ${activeFinish.category}`
+        : 'Select a finish';
+      totalPrice.textContent = formatCurrency(
+        computeTotalPrice(catalog, state.selections),
+        catalog.product.currency
+      );
+    },
+    setProgress(progress) {
+      loaderText.textContent = progress < 100
+        ? `Loading chair model... ${progress}%`
+        : 'Loading chair model...';
+    },
+    setShareStatus(message) {
+      shareStatus.textContent = message;
+      if (shareTimer) {
+        window.clearTimeout(shareTimer);
+      }
+      shareTimer = window.setTimeout(() => {
+        shareStatus.textContent = '';
+      }, shareMessageTimeout);
+    },
+    showError(message) {
+      errorBanner.hidden = false;
+      errorBanner.querySelector('[data-error-message]').textContent = message;
+    },
+    hideError() {
+      errorBanner.hidden = true;
     }
   };
-}
-
-export function bindSwatches(swatches, onSelect) {
-  for (const swatch of swatches) {
-    swatch.addEventListener('click', () => {
-      onSelect(Number.parseInt(swatch.dataset.key, 10));
-    });
-  }
-}
-
-export function setupTraySlider(slider, sliderItems) {
-  let difference;
-  let posX1 = 0;
-  let posX2 = 0;
-
-  function dragStart(event) {
-    const pointerEvent = event || window.event;
-    difference = sliderItems.offsetWidth - slider.offsetWidth;
-    difference *= -1;
-
-    if (pointerEvent.type === 'touchstart') {
-      posX1 = pointerEvent.touches[0].clientX;
-    } else {
-      posX1 = pointerEvent.clientX;
-      document.onmouseup = dragEnd;
-      document.onmousemove = dragAction;
-    }
-  }
-
-  function dragAction(event) {
-    const pointerEvent = event || window.event;
-
-    if (pointerEvent.type === 'touchmove') {
-      posX2 = posX1 - pointerEvent.touches[0].clientX;
-      posX1 = pointerEvent.touches[0].clientX;
-    } else {
-      posX2 = posX1 - pointerEvent.clientX;
-      posX1 = pointerEvent.clientX;
-    }
-
-    if (sliderItems.offsetLeft - posX2 <= 0 && sliderItems.offsetLeft - posX2 >= difference) {
-      sliderItems.style.left = `${sliderItems.offsetLeft - posX2}px`;
-    }
-  }
-
-  function dragEnd() {
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
-
-  sliderItems.onmousedown = dragStart;
-  sliderItems.addEventListener('touchstart', dragStart, { passive: true });
-  sliderItems.addEventListener('touchend', dragEnd);
-  sliderItems.addEventListener('touchmove', dragAction, { passive: true });
-}
-
-export function hideLoader(loader) {
-  if (loader?.isConnected) {
-    loader.remove();
-  }
-}
-
-export function showDragNotice(notice) {
-  notice.classList.add('start');
-}
-
-export function showLoadError(errorElement, message) {
-  errorElement.textContent = message;
-  errorElement.hidden = false;
 }

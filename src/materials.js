@@ -1,47 +1,60 @@
 import * as THREE from 'three';
 
-export function createInitialMaterial() {
-  return new THREE.MeshPhongMaterial({
-    color: 0xf1f1f1,
-    shininess: 10
-  });
-}
+const textureCache = new Map();
+const materialCache = new Map();
 
-export function applyInitialMaterials(model, partOptions, material) {
-  for (const part of partOptions) {
-    model.traverse((object) => {
-      if (object.isMesh && object.name.includes(part)) {
-        object.material = material;
-        object.nameID = part;
-      }
-    });
-  }
-}
+function getTexture(path, repeat) {
+  const cacheKey = `${path}:${repeat.join('x')}`;
 
-export function createVariantMaterial(colorOption) {
-  if (colorOption.texture) {
-    const texture = new THREE.TextureLoader().load(colorOption.texture);
-
-    texture.repeat.set(colorOption.size[0], colorOption.size[1], colorOption.size[2]);
+  if (!textureCache.has(cacheKey)) {
+    const texture = new THREE.TextureLoader().load(path);
+    texture.repeat.set(repeat[0], repeat[1]);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-
-    return new THREE.MeshPhongMaterial({
-      map: texture,
-      shininess: colorOption.shininess ?? 10
-    });
+    texture.anisotropy = 8;
+    textureCache.set(cacheKey, texture);
   }
 
-  return new THREE.MeshPhongMaterial({
-    color: parseInt(`0x${colorOption.color}`, 16),
-    shininess: colorOption.shininess ?? 10
-  });
+  return textureCache.get(cacheKey);
 }
 
-export function setMaterial(model, part, material) {
+export function createMaterial(finish) {
+  const cacheKey = finish.id;
+
+  if (materialCache.has(cacheKey)) {
+    return materialCache.get(cacheKey);
+  }
+
+  const material = finish.texture
+    ? new THREE.MeshStandardMaterial({
+        map: getTexture(finish.texture, finish.size ?? [2, 2]),
+        roughness: 0.75,
+        metalness: 0.05
+      })
+    : new THREE.MeshStandardMaterial({
+        color: parseInt(`0x${finish.color}`, 16),
+        roughness: 0.7,
+        metalness: 0.08
+      });
+
+  materialCache.set(cacheKey, material);
+  return material;
+}
+
+export function applyMaterialToPart(model, partId, material) {
   model.traverse((object) => {
-    if (object.isMesh && object.nameID === part) {
+    if (object.isMesh && object.nameID === partId) {
       object.material = material;
     }
   });
+}
+
+export function primeModelMaterials(model, parts) {
+  for (const part of parts) {
+    model.traverse((object) => {
+      if (object.isMesh && object.name.includes(part.id)) {
+        object.nameID = part.id;
+      }
+    });
+  }
 }

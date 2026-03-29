@@ -4,84 +4,98 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 export function createScene({ canvas, backgroundColor, cameraFar }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(backgroundColor);
-  scene.fog = new THREE.Fog(backgroundColor, 20, 100);
+  scene.fog = new THREE.Fog(backgroundColor, 15, 42);
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true
+    antialias: true,
+    preserveDrawingBuffer: true
   });
-
   renderer.shadowMap.enabled = true;
-  renderer.setPixelRatio(window.devicePixelRatio);
-  document.body.appendChild(renderer.domElement);
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const camera = new THREE.PerspectiveCamera(
-    50,
+    42,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
-  camera.position.z = cameraFar;
-  camera.position.x = 0;
-
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.61);
-  hemiLight.position.set(0, 50, 0);
-  scene.add(hemiLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.54);
-  dirLight.position.set(-8, 12, 8);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
-  scene.add(dirLight);
-
-  const floorGeometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
-  const floorMaterial = new THREE.MeshPhongMaterial({
-    color: 0xeeeeee,
-    shininess: 0
-  });
-  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  floor.rotation.x = -0.5 * Math.PI;
-  floor.receiveShadow = true;
-  floor.position.y = -1;
-  scene.add(floor);
+  camera.position.set(0.9, 1.9, cameraFar);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.maxPolarAngle = Math.PI / 2;
-  controls.minPolarAngle = Math.PI / 3;
+  controls.minPolarAngle = Math.PI / 3.3;
   controls.enableDamping = true;
   controls.enablePan = false;
-  controls.dampingFactor = 0.1;
-  controls.autoRotate = false;
-  controls.autoRotateSpeed = 0.2;
+  controls.dampingFactor = 0.08;
+  controls.target.set(0, 0.95, 0);
+
+  const hemiLight = new THREE.HemisphereLight(0xfff7ef, 0x6a707b, 0.95);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
+  keyLight.position.set(6, 10, 8);
+  keyLight.castShadow = true;
+  keyLight.shadow.mapSize.set(2048, 2048);
+
+  const fillLight = new THREE.DirectionalLight(0xd8e5ff, 0.45);
+  fillLight.position.set(-7, 4, 5);
+
+  const rimLight = new THREE.PointLight(0xffc98b, 0.4, 18);
+  rimLight.position.set(-2, 3.4, -3.2);
+
+  scene.add(hemiLight, keyLight, fillLight, rimLight);
+
+  const floor = new THREE.Mesh(
+    new THREE.CircleGeometry(9, 64),
+    new THREE.ShadowMaterial({ opacity: 0.18 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -0.72;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  const plinth = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.85, 2.1, 0.18, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0xd8d0c5,
+      roughness: 0.95,
+      metalness: 0
+    })
+  );
+  plinth.position.y = -0.8;
+  plinth.receiveShadow = true;
+  scene.add(plinth);
 
   function resizeRendererToDisplaySize() {
-    const currentCanvas = renderer.domElement;
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const canvasPixelWidth = currentCanvas.width / window.devicePixelRatio;
-    const canvasPixelHeight = currentCanvas.height / window.devicePixelRatio;
+    const needResize = renderer.domElement.width !== width * renderer.getPixelRatio() ||
+      renderer.domElement.height !== height * renderer.getPixelRatio();
 
-    const needResize = canvasPixelWidth !== width || canvasPixelHeight !== height;
     if (needResize) {
       renderer.setSize(width, height, false);
-    }
-
-    return needResize;
-  }
-
-  function render() {
-    controls.update();
-    renderer.render(scene, camera);
-
-    if (resizeRendererToDisplaySize()) {
-      const currentCanvas = renderer.domElement;
-      camera.aspect = currentCanvas.clientWidth / currentCanvas.clientHeight;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
   }
 
+  function render() {
+    resizeRendererToDisplaySize();
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  function captureImage() {
+    render();
+    return renderer.domElement.toDataURL('image/png');
+  }
+
   return {
     scene,
-    render
+    controls,
+    camera,
+    render,
+    captureImage
   };
 }
