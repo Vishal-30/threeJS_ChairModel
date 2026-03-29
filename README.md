@@ -2,6 +2,9 @@
 
 This is a simple chair configurator for the web.
 
+Live demo:
+[https://chair-configuration.netlify.app/](https://chair-configuration.netlify.app/)
+
 You can:
 
 - pick a chair part
